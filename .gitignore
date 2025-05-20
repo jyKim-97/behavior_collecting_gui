@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 *.mkv
+*.pkl
 
 # C extensions
 *.so
