@@ -2,7 +2,7 @@ import cv2
 # from dataclasses import dataclass
 
 
-IMAGE_BUFFER_SIZE = 200
+IMAGE_BUFFER_SIZE = 100
 FORWARD_FRAME = -100
 BACKWARD_FRAME = -200
 

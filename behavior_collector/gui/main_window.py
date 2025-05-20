@@ -5,12 +5,12 @@ from PyQt5.QtCore import Qt
 # from .video_panel import VideoPanel
 # from .video_panel import VideoPanel
 
-from behavior_selector.gui.video_panel import VideoPanel
-from behavior_selector.gui.video_panel import MOVE_FORWARD, MOVE_BACKWARD, TOGGLE_PLAY
-from behavior_selector.gui.video_control import VideoController
-from behavior_selector.gui.behavior_panel import BehaviorPanel
-from behavior_selector.gui.behavior_panel import pyqt_KEY_MAP
-from behavior_selector.gui.utils_gui import error2messagebox
+from behavior_collector.gui.video_panel import VideoPanel
+from behavior_collector.gui.video_panel import MOVE_FORWARD, MOVE_BACKWARD, TOGGLE_PLAY
+from behavior_collector.gui.video_control import VideoController
+from behavior_collector.gui.behavior_panel import BehaviorPanel
+from behavior_collector.gui.behavior_panel import pyqt_KEY_MAP
+from behavior_collector.gui.utils_gui import error2messagebox, print_keypress
 
 
 IMAGE_BUFFER_SIZE = 200
@@ -58,17 +58,11 @@ class MainWindow(QWidget):
         layout.addLayout(layout_r)
         self.setLayout(layout)
     
+    @print_keypress("main window", debug=True)
     @error2messagebox(to_warn=True)
-    def keyPressEvent(self, event):
-        print(f"Key pressed: {event.key()}")
-        # move frame
-        if event.key() == Qt.Key_L:
-            self.control_panel.move_frame(MOVE_FORWARD)
-        elif event.key() == Qt.Key_K:
-            self.control_panel.move_frame(MOVE_BACKWARD)
-        elif event.key() == Qt.Key_Space:
-            print("Key board space pressed")
-            self.control_panel.move_frame(TOGGLE_PLAY)
+    def keyPressEvent(self, event=None):
+        if event.key() in (Qt.Key_L, Qt.Key_K, Qt.Key_Space):
+            self.control_panel.keyPressEvent(event)
         
         # behavior selection
         elif event.key() == Qt.Key_Enter:

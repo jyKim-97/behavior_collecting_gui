@@ -50,3 +50,13 @@ def error2messagebox(to_warn=False):
                     raise
         return wrapper
     return decorator
+
+
+def print_keypress(message, debug=False):
+    def decorator(func):
+        def wrapper(self, event):
+            if debug:
+                print(f"Key pressed in {message}: key: {event.key()}")
+            return func(self, event)
+        return wrapper
+    return decorator

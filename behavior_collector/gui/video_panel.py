@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt, QRectF, QTimer, pyqtSignal
 
 
 from ..processing import VideoReader
-# from .video_control import VideoController
+from .video_control import VideoController, MOVE_FORWARD, MOVE_BACKWARD, NULL_SIGNAL
 
 MOVE_FORWARD = 1
 TOGGLE_PLAY = 0
@@ -19,12 +19,11 @@ MOVE_BACKWARD = -1
 class ScencePanel(QGraphicsView):
     def __init__(self):
         super().__init__()
+        self.initizlied = False
+        self.wheel_zoom_enabled = False
         self._scene = QGraphicsScene()
         self.setScene(self._scene)
         self.setMinimumSize(640, 480)
-        
-    def keypressEvent(self, event):
-        pass
     
     def clear_scene(self):
         self._scene.clear()
@@ -38,9 +37,40 @@ class ScencePanel(QGraphicsView):
         self._scene.addItem(pixmap_item)
         
         # resize view to fit image
-        self.setSceneRect(QRectF(pixmap.rect()))
-        self.fitInView(pixmap_item, mode=Qt.KeepAspectRatio)
+        if not self.initizlied:
+            self.reset_view()
+            self.initizlied = True        
+        # self.setSceneRect(QRectF(pixmap.rect()))
+        # self.fitInView(pixmap_item, mode=Qt.KeepAspectRatio)
         
+    # def zoom(self, factor):
+    #     self.scale(factor, factor)
+    
+    def reset_view(self):
+        self.resetTransform()
+        items = self._scene.items()
+        if items:
+            self.fitInView(items[0], Qt.KeepAspectRatio)
+    
+    def enable_pan_mode(self):
+        self.setDragMode(QGraphicsView.ScrollHandDrag)
+        self.wheel_zoom_enabled = True
+
+    def disable_pan_mode(self):
+        self.setDragMode(QGraphicsView.NoDrag)
+        self.wheel_zoom_enabled = False
+        
+    def wheelEvent(self, event):
+        if not self.wheel_zoom_enabled:
+            return super().wheelEvent(event)
+        
+        zoom_in_factor = 1.25
+        zoom_out_factor = 1 / zoom_in_factor
+
+        if event.angleDelta().y() > 0:
+            self.scale(zoom_in_factor, zoom_in_factor)
+        else:
+            self.scale(zoom_out_factor, zoom_out_factor)
     
         
 class VideoPanel(QWidget):
@@ -57,38 +87,42 @@ class VideoPanel(QWidget):
         # entire layout
         layout = QVBoxLayout()
         
-        # control panel
-        layout_ui = self.init_ui_control_panel()
-        layout.addLayout(layout_ui)
-        
-        # video scene
         self.scene_panel = ScencePanel()
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_next)
+        layout_ui = self.init_ui_control_panel()
+
+        layout.addLayout(layout_ui)
         layout.addWidget(self.scene_panel)
         
         self.setLayout(layout)
         
     
     def init_ui_control_panel(self):
+        
+        def _click_zoom_button():
+            if self.button_zoom.isChecked():
+                self.scene_panel.enable_pan_mode()
+            else:
+                self.scene_panel.disable_pan_mode()
+        
         layout = QHBoxLayout()
         self.button_load = QToolButton()
         self.text_load = QLabel("Video file name")
         self.button_zoom = QToolButton()
-        self.button_move = QToolButton()
         self.button_reset = QToolButton()
         
         self.button_load.setText("📁")
         self.button_zoom.setText("🔍")
-        self.button_move.setText("🖱️")
+        self.button_zoom.setCheckable(True)
         self.button_reset.setText("🔄")
+        
+        self.button_zoom.clicked.connect(_click_zoom_button)
+        self.button_reset.clicked.connect(self.scene_panel.reset_view)
         
         self.button_load.clicked.connect(self._open_file_dialog)
         
         layout.addWidget(self.button_load)
         layout.addWidget(self.text_load)
         layout.addWidget(self.button_zoom)
-        layout.addWidget(self.button_move)
         layout.addWidget(self.button_reset)
 
         return layout
@@ -116,9 +150,18 @@ class VideoPanel(QWidget):
             "total_frames": self.video_reader.total_frames,
             "fps": self.video_reader.fps,
         })
-            
-    def mouse_click(self, event):
-        pass
+
+    def update_frame(self, frame=None, dframe=None):
+        if frame == NULL_SIGNAL and dframe == NULL_SIGNAL:
+            return
+        
+        if frame == NULL_SIGNAL:
+            if dframe == MOVE_FORWARD:
+                self.update_next()
+            elif dframe == MOVE_BACKWARD:
+                self.update_prev()
+        else:
+            self.update_specific_frame(frame)
     
     @staticmethod
     def video_move_wrapper(func):
@@ -144,30 +187,11 @@ class VideoPanel(QWidget):
     def update_specific_frame(self, nframe):
         return self.video_reader.move_specific_frame(nframe)
     
-    def toggle_play(self):
-        if self.video_reader is None:
-            return None
-        
-        if self.playing:
-            self.timer().stop()
-            self.playing = False
-        else:
-            interval = 1000 // self.video_reader.fps
-            self.timer.start(interval)
-            self.playing = True
-            
-    def move_frame(self, move_type: int):
-        if move_type == MOVE_FORWARD:
-            self.update_next()
-        elif move_type == MOVE_BACKWARD:
-            self.update_prev()
-        elif move_type == TOGGLE_PLAY:
-            self.toggle_play()
-        else:
-            raise ValueError("Invalid move type")
+    def connect_controller(self, controller: VideoController):
+        controller.signal_move_frame.connect(self.update_frame)
     
-    def connect_controller(self, controller):
-        controller.move_video.connect(self.update_specific_frame)
-        controller.play_video.connect(self.move_frame)
+    def keyPressEvent(self, event):
+        print(f"Key pressed in videopanel: {event.key()}")
+        event.ignore()
         
     
