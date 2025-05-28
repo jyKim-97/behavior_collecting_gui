@@ -11,6 +11,7 @@ def setup_package():
         python_requires=">=3.10" ,
         install_requires=[
             "pyqt5",
+            # "imutils",
             "opencv-python",
             "matplotlib"
         ],

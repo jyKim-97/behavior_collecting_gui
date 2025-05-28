@@ -1,4 +1,4 @@
-from .video_reader import VideoReader
+from .video_reader import VideoReader, ThreadVideoReader
 
 
 __all__ = [

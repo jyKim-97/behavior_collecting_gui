@@ -110,7 +110,7 @@ class VideoController(QGroupBox):
             self.setFrame(dframe=MOVE_FORWARD)
         elif event.key() == Qt.Key_K: # move backward
             self.setFrame(dframe=MOVE_BACKWARD)
-        elif event.key() == Qt.Key_Space: # toggle play
+        elif event.key() == Qt.Key_M: # toggle play
             self.toggle_play()
     
     def setFrame(self, frame: int=None, dframe: int=None):
@@ -148,6 +148,7 @@ class VideoController(QGroupBox):
             interval = int(1000//self.fps) // 2
             self.timer_play.start(interval)
             self.is_playing = True
+        print("Toggle play:", self.is_playing)
         
     @staticmethod
     def update_frame(func):

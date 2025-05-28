@@ -61,7 +61,7 @@ class MainWindow(QWidget):
     @print_keypress("main window", debug=True)
     @error2messagebox(to_warn=True)
     def keyPressEvent(self, event=None):
-        if event.key() in (Qt.Key_L, Qt.Key_K, Qt.Key_Space):
+        if event.key() in (Qt.Key_L, Qt.Key_K, Qt.Key_M):
             self.control_panel.keyPressEvent(event)
         
         # behavior selection

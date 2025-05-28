@@ -6,7 +6,7 @@ from PyQt5.QtGui import QPixmap, QImage, QFontMetrics
 from PyQt5.QtCore import Qt, QRectF, QTimer, pyqtSignal
 
 
-from ..processing import VideoReader
+from ..processing import VideoReader, ThreadVideoReader
 from .video_control import VideoController, MOVE_FORWARD, MOVE_BACKWARD, NULL_SIGNAL
 
 MOVE_FORWARD = 1
@@ -40,11 +40,6 @@ class ScencePanel(QGraphicsView):
         if not self.initizlied:
             self.reset_view()
             self.initizlied = True        
-        # self.setSceneRect(QRectF(pixmap.rect()))
-        # self.fitInView(pixmap_item, mode=Qt.KeepAspectRatio)
-        
-    # def zoom(self, factor):
-    #     self.scale(factor, factor)
     
     def reset_view(self):
         self.resetTransform()
@@ -143,7 +138,8 @@ class VideoPanel(QWidget):
         self.text_load.setText(elided_text)
         
         # read video file
-        self.video_reader = VideoReader(filename)
+        # self.video_reader = VideoReader(filename)
+        self.video_reader = ThreadVideoReader(filename)
         self.update_next()
         self.file_selected.emit({
             "filename": filename,

@@ -9,7 +9,6 @@ from typing import List
 
 # TODO: add ytick size 
 
-
 class BehaviorPlotWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
